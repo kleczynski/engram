@@ -14,6 +14,7 @@ type Props = {
   totalNodes: number;
   visibleEdges: number;
   lastSyncedAt: string | null;
+  hasSession?: boolean;
 };
 
 const FILTERS: { value: GraphFilter; label: string }[] = [
@@ -49,6 +50,7 @@ export function GraphControls({
   totalNodes,
   visibleEdges,
   lastSyncedAt,
+  hasSession = false,
 }: Props) {
   return (
     <div className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-wrap items-start justify-between gap-3 p-4 sm:p-6">
@@ -94,25 +96,29 @@ export function GraphControls({
             Reset view
           </button>
 
-          <button
-            type="button"
-            onClick={onSync}
-            disabled={syncing}
-            className="flex items-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200 backdrop-blur-md transition-colors hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <span className={syncing ? "inline-block animate-spin" : undefined}>
-              ↻
-            </span>
-            {syncing ? "Syncing" : "Sync"}
-          </button>
+          {hasSession && (
+            <button
+              type="button"
+              onClick={onSync}
+              disabled={syncing}
+              className="flex items-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-3 py-2 text-xs font-semibold text-cyan-200 backdrop-blur-md transition-colors hover:bg-cyan-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <span className={syncing ? "inline-block animate-spin" : undefined}>
+                ↻
+              </span>
+              {syncing ? "Syncing" : "Sync"}
+            </button>
+          )}
 
-          <button
-            type="button"
-            onClick={onSignOut}
-            className="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-xs font-medium text-slate-400 backdrop-blur-md transition-colors hover:text-slate-200"
-          >
-            Sign out
-          </button>
+          {hasSession && (
+            <button
+              type="button"
+              onClick={onSignOut}
+              className="rounded-xl border border-white/10 bg-slate-950/70 px-3 py-2 text-xs font-medium text-slate-400 backdrop-blur-md transition-colors hover:text-slate-200"
+            >
+              Sign out
+            </button>
+          )}
         </div>
 
         <p className="rounded-lg bg-slate-950/60 px-2 py-1 font-mono text-[11px] text-slate-400 backdrop-blur-md">

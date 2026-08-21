@@ -1,5 +1,3 @@
-// Generated from the Supabase schema. Regenerate after every migration:
-//   supabase gen types typescript --project-id <ref> > utils/supabase/database.types.ts
 export type Json =
   | string
   | number
@@ -21,6 +19,7 @@ export type Database = {
           created_at: string | null
           edge_type: string
           id: string
+          owner_id: string | null
           source_page_id: string | null
           target_page_id: string | null
         }
@@ -28,6 +27,7 @@ export type Database = {
           created_at?: string | null
           edge_type: string
           id?: string
+          owner_id?: string | null
           source_page_id?: string | null
           target_page_id?: string | null
         }
@@ -35,6 +35,7 @@ export type Database = {
           created_at?: string | null
           edge_type?: string
           id?: string
+          owner_id?: string | null
           source_page_id?: string | null
           target_page_id?: string | null
         }
@@ -137,6 +138,7 @@ export type Database = {
           lucid_url: string | null
           notion_id: string
           notion_url: string | null
+          owner_id: string | null
           parent_notion_id: string | null
           relation_hash: string | null
           title: string
@@ -151,6 +153,7 @@ export type Database = {
           lucid_url?: string | null
           notion_id: string
           notion_url?: string | null
+          owner_id?: string | null
           parent_notion_id?: string | null
           relation_hash?: string | null
           title: string
@@ -165,6 +168,7 @@ export type Database = {
           lucid_url?: string | null
           notion_id?: string
           notion_url?: string | null
+          owner_id?: string | null
           parent_notion_id?: string | null
           relation_hash?: string | null
           title?: string

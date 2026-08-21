@@ -74,7 +74,7 @@ function CameraRig({ focus }: { focus: Focus | null }) {
   return null;
 }
 
-export function GraphCanvas() {
+export function GraphCanvas({ hasSession = false }: { hasSession?: boolean }) {
   const router = useRouter();
 
   const [payload, setPayload] = useState<GraphPayload | null>(null);
@@ -156,7 +156,7 @@ export function GraphCanvas() {
   );
 
   useEffect(() => {
-    if (!payload || autoSynced.current) return;
+    if (!hasSession || !payload || autoSynced.current) return;
     autoSynced.current = true;
 
     const stale =
@@ -164,7 +164,7 @@ export function GraphCanvas() {
       Date.now() - Date.parse(payload.lastSyncedAt) > STALE_AFTER_MS;
 
     if (stale) void runSync();
-  }, [payload, runSync]);
+  }, [hasSession, payload, runSync]);
 
   // The solver blocks for a moment, so let the loading state paint first.
   useEffect(() => {
@@ -402,6 +402,7 @@ export function GraphCanvas() {
         totalNodes={payload?.nodes.length ?? 0}
         visibleEdges={visibleEdgeCount}
         lastSyncedAt={payload?.lastSyncedAt ?? null}
+        hasSession={hasSession}
       />
 
       <SidePanel

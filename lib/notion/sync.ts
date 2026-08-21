@@ -1,7 +1,7 @@
 import type { SyncSummary } from "@/lib/graph/types";
 import { descendantCounts, hubScore } from "@/lib/graph/weights";
-import { getRootPageId } from "@/lib/notion/client";
-import { crawlSubtree } from "@/lib/notion/crawl";
+import { getRootPageIds, getSkipRootTitles } from "@/lib/notion/client";
+import { crawlSubtrees } from "@/lib/notion/crawl";
 import { contentHash, relationHash } from "@/lib/notion/hash";
 import type { TablesInsert } from "@/utils/supabase/database.types";
 import { createAdminClient } from "@/utils/supabase/server";
@@ -23,12 +23,16 @@ function edgeKey(source: string, target: string, type: string): string {
 }
 
 export async function syncNotionSubtree(
-  options: { deadline?: number } = {},
+  options: { deadline?: number; rootPageIds?: string[] } = {},
 ): Promise<SyncSummary> {
   const startedAt = Date.now();
   const supabase = createAdminClient();
+  const rootPageIds = options.rootPageIds ?? getRootPageIds();
 
-  const crawl = await crawlSubtree(getRootPageId(), { deadline: options.deadline });
+  const crawl = await crawlSubtrees(rootPageIds, {
+    deadline: options.deadline,
+    skipRootTitles: getSkipRootTitles(),
+  });
   const warnings = [...crawl.warnings];
 
   const { data: existingRows, error: existingError } = await supabase

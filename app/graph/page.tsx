@@ -1,5 +1,3 @@
-import { redirect } from "next/navigation";
-
 import { GraphCanvas } from "@/components/graph/GraphCanvas";
 import { createClient } from "@/utils/supabase/server";
 
@@ -11,8 +9,5 @@ export default async function GraphPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Middleware already guards this route; this keeps the page safe on its own.
-  if (!user) redirect("/login?next=%2Fgraph");
-
-  return <GraphCanvas />;
+  return <GraphCanvas hasSession={Boolean(user)} />;
 }

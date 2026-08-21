@@ -22,3 +22,14 @@ export function optionalEnv(name: string): string | undefined {
   const value = process.env[name]?.trim();
   return !value || PLACEHOLDER.test(value) ? undefined : value;
 }
+
+/** Optional keys that should still be called out when unset. */
+export function optionalEnvWarned(name: string): string | undefined {
+  const value = optionalEnv(name);
+  if (!value) {
+    console.warn(
+      `[engram] ${name} is missing. Sync will continue without it — see .env.local.example.`,
+    );
+  }
+  return value;
+}

@@ -1,6 +1,6 @@
 import { Client } from "@notionhq/client";
 
-import { optionalEnv, requireEnv } from "@/lib/env";
+import { optionalEnv, optionalEnvWarned, requireEnv } from "@/lib/env";
 
 /** Latest Notion API version. The SDK still defaults to 2025-09-03. */
 export const DEFAULT_NOTION_VERSION = "2026-03-11";
@@ -57,6 +57,37 @@ export function getNotionClient(): Client {
 
 export function getRootPageId(): string {
   return requireEnv("NOTION_OBSERVABILITY_ROOT_PAGE_ID");
+}
+
+function normalizePageId(id: string): string {
+  return id.replace(/-/g, "").toLowerCase();
+}
+
+/**
+ * Crawl roots. Observability stays required; Engram is optional until the
+ * hub page is shared with synapsvault and the env var is set.
+ */
+export function getRootPageIds(): string[] {
+  const roots = [getRootPageId()];
+  const engram = optionalEnvWarned("NOTION_ENGRAM_ROOT_PAGE_ID");
+
+  if (engram) {
+    const seen = new Set(roots.map(normalizePageId));
+    if (!seen.has(normalizePageId(engram))) roots.push(engram);
+  }
+
+  return roots;
+}
+
+/** Comma-separated top-level titles to skip without descending. */
+export function getSkipRootTitles(): string[] {
+  const raw = optionalEnvWarned("NOTION_SKIP_ROOT_TITLES");
+  if (!raw) return [];
+
+  return raw
+    .split(",")
+    .map((title) => title.trim())
+    .filter(Boolean);
 }
 
 /** Notion page links are for humans; IDs remain the stable reference. */

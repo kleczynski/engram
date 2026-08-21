@@ -43,6 +43,8 @@ export type CrawlOptions = {
   maxDepth?: number;
   /** Epoch ms after which the crawl stops and reports itself truncated. */
   deadline?: number;
+  /** Top-level page titles to skip without descending (case-insensitive). */
+  skipRootTitles?: string[];
 };
 
 type QueueEntry = {
@@ -342,6 +344,17 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
+function matchesSkipRootTitle(title: string, skipTitles: string[]): boolean {
+  const normalized = title.trim().toLowerCase();
+  return skipTitles.some((skip) => {
+    const target = skip.trim().toLowerCase();
+    return (
+      target.length > 0 &&
+      (normalized === target || normalized.endsWith(` ${target}`))
+    );
+  });
+}
+
 /**
  * Walks the page subtree with `blocks.children.list`. The REST search endpoint
  * cannot express "everything under this page", so recursion is the only option.
@@ -370,10 +383,23 @@ export async function crawlSubtree(
     );
   }
 
+  const title = pageTitle(rootResponse);
+  if (matchesSkipRootTitle(title, options.skipRootTitles ?? [])) {
+    return {
+      rootNotionId: rootResponse.id,
+      pages: [],
+      truncated: false,
+      warnings: [
+        `Skipped root "${title}" because it matches NOTION_SKIP_ROOT_TITLES.`,
+      ],
+      requestCount: 1,
+    };
+  }
+
   const queue: QueueEntry[] = [
     {
       notionId: rootResponse.id,
-      title: pageTitle(rootResponse),
+      title,
       parentNotionId: null,
       lastEditedTime: rootResponse.last_edited_time,
       depth: 0,
@@ -459,4 +485,42 @@ export async function crawlSubtree(
     warnings: [...new Set(warnings)],
     requestCount,
   };
+}
+
+/**
+ * Crawls each root independently, then merges by Notion id so overlapping
+ * subtrees are not duplicated before the diff.
+ */
+export async function crawlSubtrees(
+  rootPageIds: string[],
+  options: CrawlOptions = {},
+): Promise<CrawlResult> {
+  if (rootPageIds.length === 0) {
+    throw new Error("No Notion root page IDs configured.");
+  }
+
+  const merged: CrawlResult = {
+    rootNotionId: rootPageIds[0]!,
+    pages: [],
+    truncated: false,
+    warnings: [],
+    requestCount: 0,
+  };
+  const seen = new Set<string>();
+
+  for (const rootPageId of rootPageIds) {
+    const result = await crawlSubtree(rootPageId, options);
+    merged.truncated ||= result.truncated;
+    merged.requestCount += result.requestCount;
+    merged.warnings.push(...result.warnings);
+
+    for (const page of result.pages) {
+      if (seen.has(page.notionId)) continue;
+      seen.add(page.notionId);
+      merged.pages.push(page);
+    }
+  }
+
+  merged.warnings = [...new Set(merged.warnings)];
+  return merged;
 }

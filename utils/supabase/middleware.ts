@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import type { Database } from "@/utils/supabase/database.types";
 
-const PUBLIC_PATHS = ["/", "/login", "/auth"];
+const PUBLIC_PATHS = ["/", "/login", "/auth", "/graph", "/api/graph"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some(
