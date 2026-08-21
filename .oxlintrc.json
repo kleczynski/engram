@@ -1,0 +1,39 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "nextjs", "jsx-a11y", "import", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn"
+  },
+  "rules": {
+    // eslint-config-next enables these as recommended but oxlint categorizes them outside correctness
+    "react/no-unescaped-entities": "warn",
+    "react/jsx-no-target-blank": "warn",
+    "react/exhaustive-deps": "warn",
+    // React 19 JSX transform does not require React in scope
+    "react/react-in-jsx-scope": "off",
+    // R3F uses custom JSX elements (mesh, ambientLight, etc.) that are not standard DOM props
+    "react/no-unknown-property": "off",
+    // CSS/global style imports in layout.tsx are intentionally side-effect-only
+    "import/no-unassigned-import": "off",
+    // Async data fetching from effects (fetch → setState) is standard pre-React-19 pattern
+    "react/set-state-in-effect": "off"
+  },
+  "ignorePatterns": [
+    "node_modules/**",
+    ".next/**",
+    "out/**",
+    "build/**",
+    "next-env.d.ts"
+  ],
+  "settings": {
+    "next": {
+      "rootDir": "./"
+    }
+  }
+  // Gaps vs eslint-config-next (next/core-web-vitals + next/typescript):
+  // - No custom import resolver: eslint-config-next resolves @/ aliases and TS paths.
+  //   Oxlint import plugin has no custom resolver support. Impact: minimal — tsc --noEmit catches unresolved imports.
+  // - No React version auto-detection: eslint-config-next auto-detects React version for
+  //   version-specific rules. Oxlint React rules are version-agnostic; not a practical gap.
+}
