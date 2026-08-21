@@ -19,7 +19,7 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-modules-
-      - run: npm ci
+      - run: npm install
       - run: npx oxlint .
 
   typecheck:
@@ -34,7 +34,7 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-modules-
-      - run: npm ci
+      - run: npm install
       - run: npx tsc --noEmit
 
   build:
@@ -49,5 +49,5 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
           restore-keys: ${{ runner.os }}-node-modules-
-      - run: npm ci
+      - run: npm install
       - run: npm run build
