@@ -2,7 +2,7 @@
 
 Engram crawls a Notion subtree, diffs it into Supabase, and renders pages as pulsing neurons in Three.js. Single-user; Notion is the content source of truth. Week 1 is shipped; Week 2 (embeddings, AI links, write-back) is not — do not start it unless asked.
 
-**Live:** https://engram-ten-alpha.vercel.app · Vercel `iclevers-projects/engram` · Supabase `skjnmileqyxrnjvxipwm` (eu-west-1) · Notion integration **synapsvault** · crawl root `Project → AI Engineering` (`32523a98-e714-8062-a3a3-cc2f89c39547`) · git is not initialized.
+**Live:** https://engram-ten-alpha.vercel.app · Vercel `iclevers-projects/engram` · Supabase `skjnmileqyxrnjvxipwm` (eu-west-1) · Notion integration **synapsvault** · crawl root `Project → AI Engineering` (`32523a98-e714-8062-a3a3-cc2f89c39547`) · GitHub `kleczynski/engram` (public, branch: main).
 
 ## Stack
 
@@ -86,6 +86,26 @@ After a migration: `supabase gen types typescript --project-id skjnmileqyxrnjvxi
 | Figma MCP | Unused by this app. |
 | `~/.agents/skills/grilling/SKILL.md` | Later: stress-test hub sketch / live bugs. Do not load until asked. |
 | Model-router lock | Skip re-route when `.cursor/model-routing.lock.json` is valid. |
+
+## Git & CI
+
+**Remote:** https://github.com/kleczynski/engram (public, main branch)
+
+**Branch protection (main):**
+- Required status checks: `lint`, `typecheck`, `build` — must pass before merge.
+- `claude-review` is advisory only — not a blocking check.
+- Force push allowed (owner can fix history if an agent goes wrong).
+- PR reviews not required; enforce admins disabled.
+
+**Pre-commit hook** (husky + lint-staged):
+- `oxlint` on staged `*.{ts,tsx}` files
+- `npx tsc --noEmit` (full typecheck)
+
+**Lint command:** `npx oxlint .` (replaces ESLint; config in `.oxlintrc.json`).
+
+**Emergency bypass:** `--no-verify` skips the pre-commit hook. Use **only** with explicit user ask — never autonomously.
+
+**GitHub Actions secrets:** `ANTHROPIC_API_KEY` must be added to the repo's Actions secrets for the Claude PR review workflow. Go to Settings → Secrets and variables → Actions → New repository secret → name: `ANTHROPIC_API_KEY`, value: the key from `.env.local`. `GITHUB_TOKEN` is provided automatically by Actions.
 
 ## Engram hub — agreed foundation (implement in this order)
 

@@ -1,0 +1,56 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-ai-review') }}
+    permissions:
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get PR diff
+        id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          DIFF=$(gh pr diff "$PR_NUMBER")
+          if [ -z "$DIFF" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "$DIFF" > /tmp/pr-diff.txt
+          fi
+
+      - name: Review with Claude
+        if: steps.diff.outputs.skip != 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          DIFF=$(cat /tmp/pr-diff.txt)
+
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
+            -H "content-type: application/json" \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -d "$(jq -n \
+              --arg diff "$DIFF" \
+              '{
+                model: "claude-haiku-4-5-20251001",
+                max_tokens: 2048,
+                system: "You are a senior engineer reviewing a PR on Engram, a Next.js 15 / React 19 / Three.js knowledge graph app.\nStack constraints: no shadcn, no multi-user, no in-app capture, helpers at @/utils/supabase/ not @/lib/supabase/,\nmiddleware.ts must not be renamed, Next.js version is 15.5.23 not 16.x.\nReview the diff for: correctness, security (no secrets, no SQL injection, no XSS), stack constraint violations,\nand anything that would be hard to revert. Be concise. Flag blockers first, then suggestions.",
+                messages: [{role: "user", content: ("Review this PR diff:\n\n" + $diff)}]
+              }')")
+
+          REVIEW=$(echo "$RESPONSE" | jq -r '.content[0].text // "Failed to get review response."')
+
+          printf '🤖 **Claude Review (advisory)**\n\n%s' "$REVIEW" > /tmp/review-body.txt
+          gh pr review "$PR_NUMBER" --comment --body-file /tmp/review-body.txt
